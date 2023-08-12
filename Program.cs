@@ -13,6 +13,7 @@ public class DragDropForm : Form
 
     private ContextMenuStrip contextMenuStrip;
     private ToolStripMenuItem setOutputPathMenuItem;
+    private ToolStripMenuItem aboutMenuItem;
 
     private string customOutputPath = "";
 
@@ -36,7 +37,7 @@ public class DragDropForm : Form
 
         dropLabel = new Label()
         {
-            Text = "Drop image files here to convert\n\nRightclick here to set custom output path",
+            Text = "Drop image files here to convert\n\nRight-click here to set custom output path",
             AutoSize = true
         };
         this.Controls.Add(dropLabel);
@@ -60,9 +61,15 @@ public class DragDropForm : Form
 
         contextMenuStrip = new ContextMenuStrip();
         setOutputPathMenuItem = new ToolStripMenuItem("Set Custom Output Path");
+        setOutputPathMenuItem.Image = SystemIcons.Application.ToBitmap();
+        aboutMenuItem = new ToolStripMenuItem("About the Program");
+        aboutMenuItem.Image = SystemIcons.Information.ToBitmap();
+
         contextMenuStrip.Items.Add(setOutputPathMenuItem);
+        contextMenuStrip.Items.Add(aboutMenuItem);
         this.ContextMenuStrip = contextMenuStrip;
         setOutputPathMenuItem.Click += SetOutputPathMenuItem_Click;
+        aboutMenuItem.Click += AboutMenuItem_Click;
 
         this.FormBorderStyle = FormBorderStyle.FixedSingle;
         this.MaximizeBox = false;
@@ -151,11 +158,60 @@ public class DragDropForm : Form
         }
     }
 
+    private void AboutMenuItem_Click(object sender, EventArgs e)
+    {
+        using (var aboutForm = new AboutForm())
+        {
+            aboutForm.ShowDialog();
+        }
+    }
+
     [STAThread]
     public static void Main()
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new DragDropForm());
+    }
+}
+
+public class AboutForm : Form
+{
+    private Label nameLabel;
+    private Label versionLabel;
+    private Label createdByLabel;
+
+    public AboutForm()
+    {
+        this.Text = "About";
+        this.Size = new Size(300, 150);
+        this.MaximizeBox = false;
+        this.MinimizeBox = false;
+        this.FormBorderStyle = FormBorderStyle.FixedSingle;
+
+        nameLabel = new Label()
+        {
+            Text = "Simple Image Converter",
+            Font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold),
+            AutoSize = true,
+            Location = new Point(10, 10)
+        };
+        this.Controls.Add(nameLabel);
+
+        versionLabel = new Label()
+        {
+            Text = "Version 1.1.1",
+            AutoSize = true,
+            Location = new Point(10, 40)
+        };
+        this.Controls.Add(versionLabel);
+
+        createdByLabel = new Label()
+        {
+            Text = "Created by Fabi-Chan",
+            AutoSize = true,
+            Location = new Point(10, 70)
+        };
+        this.Controls.Add(createdByLabel);
     }
 }
