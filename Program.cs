@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using ImageMagick;
 
@@ -13,11 +11,17 @@ public class DragDropForm : Form
     private Label outputFormatLabel;
     private int conversionCount;
 
+    private ContextMenuStrip contextMenuStrip;
+    private ToolStripMenuItem setOutputPathMenuItem;
+
+    private string customOutputPath = "";
+
     public DragDropForm()
     {
         this.AllowDrop = true;
         this.DragEnter += new DragEventHandler(Form_DragEnter);
         this.DragDrop += new DragEventHandler(Form_DragDrop);
+
         string iconFilePath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "icon.ico");
         FileInfo fileInfo = new FileInfo(iconFilePath);
         if (fileInfo.Exists)
@@ -29,9 +33,10 @@ public class DragDropForm : Form
         {
             this.Icon = SystemIcons.Application;
         }
+
         dropLabel = new Label()
         {
-            Text = "Drop image files here to convert",
+            Text = "Drop image files here to convert\n\nRightclick here to set custom output path",
             AutoSize = true
         };
         this.Controls.Add(dropLabel);
@@ -53,11 +58,16 @@ public class DragDropForm : Form
         formatComboBox.SelectedIndex = 0;
         this.Controls.Add(formatComboBox);
 
-        this.FormBorderStyle = FormBorderStyle.FixedSingle; // Set the form's border style to FixedSingle
-        this.MaximizeBox = false; // Disable the maximize button
-        this.MinimizeBox = false; // Disable the minimize button
-        this.Text = "Simple Image Converter"; // Set the window title
+        contextMenuStrip = new ContextMenuStrip();
+        setOutputPathMenuItem = new ToolStripMenuItem("Set Custom Output Path");
+        contextMenuStrip.Items.Add(setOutputPathMenuItem);
+        this.ContextMenuStrip = contextMenuStrip;
+        setOutputPathMenuItem.Click += SetOutputPathMenuItem_Click;
 
+        this.FormBorderStyle = FormBorderStyle.FixedSingle;
+        this.MaximizeBox = false;
+        this.MinimizeBox = false;
+        this.Text = "Simple Image Converter";
         conversionCount = 0;
     }
 
@@ -80,7 +90,16 @@ public class DragDropForm : Form
         {
             try
             {
-                string outputPath = Path.ChangeExtension(file, formatComboBox.SelectedItem.ToString().ToLower());
+                string outputPath = customOutputPath;
+                if (string.IsNullOrEmpty(outputPath))
+                {
+                    outputPath = Path.ChangeExtension(file, formatComboBox.SelectedItem.ToString().ToLower());
+                }
+                else
+                {
+                    outputPath = Path.Combine(outputPath, Path.GetFileNameWithoutExtension(file) + "." + formatComboBox.SelectedItem.ToString().ToLower());
+                }
+
                 using (MagickImage image = new MagickImage(file))
                 {
                     if (formatComboBox.SelectedItem.ToString().Equals("WEBP", StringComparison.OrdinalIgnoreCase))
@@ -119,16 +138,17 @@ public class DragDropForm : Form
         }
     }
 
-    private void InitializeComponent()
+    private void SetOutputPathMenuItem_Click(object sender, EventArgs e)
     {
-        System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DragDropForm));
-        SuspendLayout();
-        // 
-        // DragDropForm
-        // 
-        ClientSize = new Size(284, 261);
-        Name = "DragDropForm";
-        ResumeLayout(false);
+        using (var folderDialog = new FolderBrowserDialog())
+        {
+            DialogResult result = folderDialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                customOutputPath = folderDialog.SelectedPath;
+                MessageBox.Show("Custom output path set to: " + customOutputPath);
+            }
+        }
     }
 
     [STAThread]
