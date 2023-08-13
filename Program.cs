@@ -15,6 +15,9 @@ public class DragDropForm : Form
     private ToolStripMenuItem setOutputPathMenuItem;
     private ToolStripMenuItem aboutMenuItem;
 
+    private Label qualityLabel;
+    private TrackBar qualitySlider;
+
     private string customOutputPath = "";
 
     public DragDropForm()
@@ -38,7 +41,8 @@ public class DragDropForm : Form
         dropLabel = new Label()
         {
             Text = "Drop image files here to convert\n\nRight-click here to set custom output path",
-            AutoSize = true
+            AutoSize = true,
+            Location = new Point(10, 10)
         };
         this.Controls.Add(dropLabel);
 
@@ -59,6 +63,26 @@ public class DragDropForm : Form
         formatComboBox.SelectedIndex = 0;
         this.Controls.Add(formatComboBox);
 
+        qualityLabel = new Label()
+        {
+            Text = "Quality: 100%",
+            AutoSize = true,
+            Location = new Point(10, 43)
+        };
+        this.Controls.Add(qualityLabel);
+
+        qualitySlider = new TrackBar()
+        {
+            Minimum = 0,
+            Maximum = 100,
+            TickFrequency = 10,
+            Value = 100,
+            Location = new Point(100, 40),
+            Size = new Size(200, 20)
+        };
+        qualitySlider.Scroll += QualitySlider_Scroll;
+        this.Controls.Add(qualitySlider);
+
         contextMenuStrip = new ContextMenuStrip();
         setOutputPathMenuItem = new ToolStripMenuItem("Set Custom Output Path");
         setOutputPathMenuItem.Image = SystemIcons.Application.ToBitmap();
@@ -76,6 +100,11 @@ public class DragDropForm : Form
         this.MinimizeBox = false;
         this.Text = "Simple Image Converter";
         conversionCount = 0;
+
+        int paddingHorizontal = 20;
+        int paddingVertical = 10;
+        this.Size = new Size(this.Size.Width + paddingHorizontal, this.Size.Height + paddingVertical);
+        dropLabel.Location = new Point(dropLabel.Location.X + paddingHorizontal / 2, dropLabel.Location.Y + paddingVertical / 2);
     }
 
     protected override void OnLoad(EventArgs e)
@@ -121,49 +150,53 @@ public class DragDropForm : Form
                     {
                         image.Format = MagickFormat.Svg;
                     }
+
+                    int quality = qualitySlider.Value;
+                    image.Quality = quality;
+
                     image.Write(outputPath);
                 }
-                if (files.Length > 1)
+                if (++conversionCount == 1)
                 {
-                    conversionCount++;
+                    dropLabel.Text = "1 file converted successfully\n\nRight-click here to set custom output path";
                 }
                 else
                 {
-                    MessageBox.Show("File converted: " + outputPath);
+                    dropLabel.Text = $"{conversionCount} files converted successfully\n\nRight-click here to set custom output path";
                 }
             }
             catch (MagickException ex)
             {
-                MessageBox.Show("Failed to convert file: " + file + "\nError: " + ex.Message);
+                MessageBox.Show("ImageMagick Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        if (conversionCount > 0)
-        {
-            MessageBox.Show(conversionCount + " file(s) converted.");
-            conversionCount = 0;
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 
     private void SetOutputPathMenuItem_Click(object sender, EventArgs e)
     {
-        using (var folderDialog = new FolderBrowserDialog())
+        using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
         {
-            DialogResult result = folderDialog.ShowDialog();
-            if (result == DialogResult.OK)
+            DialogResult result = folderBrowserDialog.ShowDialog();
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath))
             {
-                customOutputPath = folderDialog.SelectedPath;
-                MessageBox.Show("Custom output path set to: " + customOutputPath);
+                customOutputPath = folderBrowserDialog.SelectedPath;
             }
         }
     }
 
     private void AboutMenuItem_Click(object sender, EventArgs e)
     {
-        using (var aboutForm = new AboutForm())
-        {
-            aboutForm.ShowDialog();
-        }
+        MessageBox.Show("Simple Image Converter\nVersion 1.0\n\nCreated by Your Name", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void QualitySlider_Scroll(object sender, EventArgs e)
+    {
+        int quality = qualitySlider.Value;
+        qualityLabel.Text = "Quality: " + quality.ToString() + "%";
     }
 
     [STAThread]
@@ -172,46 +205,5 @@ public class DragDropForm : Form
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new DragDropForm());
-    }
-}
-
-public class AboutForm : Form
-{
-    private Label nameLabel;
-    private Label versionLabel;
-    private Label createdByLabel;
-
-    public AboutForm()
-    {
-        this.Text = "About";
-        this.Size = new Size(300, 150);
-        this.MaximizeBox = false;
-        this.MinimizeBox = false;
-        this.FormBorderStyle = FormBorderStyle.FixedSingle;
-
-        nameLabel = new Label()
-        {
-            Text = "Simple Image Converter",
-            Font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold),
-            AutoSize = true,
-            Location = new Point(10, 10)
-        };
-        this.Controls.Add(nameLabel);
-
-        versionLabel = new Label()
-        {
-            Text = "Version 1.1.1",
-            AutoSize = true,
-            Location = new Point(10, 40)
-        };
-        this.Controls.Add(versionLabel);
-
-        createdByLabel = new Label()
-        {
-            Text = "Created by Fabi-Chan",
-            AutoSize = true,
-            Location = new Point(10, 70)
-        };
-        this.Controls.Add(createdByLabel);
     }
 }
