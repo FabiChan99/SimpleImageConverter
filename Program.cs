@@ -184,6 +184,7 @@ public class DragDropForm : Form
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath))
             {
                 customOutputPath = folderBrowserDialog.SelectedPath;
+                MessageBox.Show("Custom output path set successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
     }
