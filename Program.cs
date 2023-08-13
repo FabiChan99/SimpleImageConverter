@@ -190,7 +190,7 @@ public class DragDropForm : Form
 
     private void AboutMenuItem_Click(object sender, EventArgs e)
     {
-        MessageBox.Show("Simple Image Converter\nVersion 1.0\n\nCreated by Your Name", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        MessageBox.Show("Simple Image Converter\nVersion 1.2\n\nCreated by Fabi-Chan", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void QualitySlider_Scroll(object sender, EventArgs e)
